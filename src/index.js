@@ -10,9 +10,6 @@ const io = socketio(server);
 io.on("connection", (socket) => {
   console.log("New Connection");
 
-  //on join the chat
-  
-
 });
 
 const pathToPublic = path.join(__dirname, "../public");
