@@ -1,6 +1,9 @@
 socket = io();
 
 const displayError = (msg, error) => {
+  if (!error) {
+    error = new Error(msg);
+  }
   const errorElement = document.getElementById("errors");
   errorElement.innerHTML += `<p>${msg}</p>`;
   if (typeof error !== "undefined") {
@@ -50,7 +53,7 @@ kind: "audioinput"
 label: ""
 __proto__: InputDeviceInfo*/
 
-document.querySelector("#join-video").addEventListener("click", async () => {
+document.getElementById("join-video").addEventListener("click", async () => {
   const constraints = {};
   const cameras = await listMediaDevice("videoinput");
   const mics = await listMediaDevice("audioinput");
@@ -59,21 +62,25 @@ document.querySelector("#join-video").addEventListener("click", async () => {
   constraints.audio = mics.length !== 0 ? true : false;
 
   //Check for constraint video and audio true or not
-  if (constraints.video === false) displayError("Video Device doesn't exist");
-  if (constraints.audio === false) displayError("Audio Device doesn't exist");
+  if (constraints.video === false)
+    return displayError("Video Device doesn't exist");
+  if (constraints.audio === false)
+    return displayError("Audio Device doesn't exist");
 
   //check user media for audio false
   if (!(await checkUserMedia("video"))) {
     displayError("Video Feed is broken");
     constraints.video = false;
+    return;
   }
   //check user media for video false
   if (!(await checkUserMedia("audio"))) {
     displayError("Audio Feed is broken");
     constraints.audio = false;
+    return;
   }
   //set stream to user media output
   const stream = await navigator.mediaDevices.getUserMedia(constraints);
-  const feed = document.querySelector("#video-feed");
+  const feed = document.getElementById("video-feed");
   feed.srcObject = stream;
 });
