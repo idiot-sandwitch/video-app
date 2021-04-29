@@ -1,11 +1,24 @@
 <!DOCTYPE html>
 <html>
-  <head></head>
-
+  <head>
+    <head>
+      <meta charset="utf-8" />
+      <title>Video Chat Application</title>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.js"></script>
+      <link href="css/styles.css" rel="stylesheet" />
+    </head>
+  </head>
   <body>
-    <h1>Video Feed</h1>
-    <video id="video-feed" autoplay></video>
-    <button id="join-video">Join</button>
+    <div id="video-chat-lobby">
+      <h1>Video Feed</h1>
+      <input id="roomName" type="text" placeholder="Room Name" />
+      <button id="join-video">Join</button>
+    </div>
+    <div id="video-chat-room">
+      <video id="user-video" autoplay></video>
+      <video id="peer-video" autoplay></video>
+    </div>
+
     <div id="errors"></div>
   </body>
 
