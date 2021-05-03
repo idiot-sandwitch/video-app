@@ -71,13 +71,11 @@ document.getElementById("join-video").addEventListener("click", async () => {
   if (!(await checkUserMedia("video"))) {
     displayError("Video Feed is broken");
     constraints.video = false;
-    return;
   }
   //check user media for video false
   if (!(await checkUserMedia("audio"))) {
     displayError("Audio Feed is broken");
     constraints.audio = false;
-    return;
   }
   //set stream to user media output
   const stream = await navigator.mediaDevices.getUserMedia(constraints);
