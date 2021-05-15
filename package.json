@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon src/index.js"
+    "dev": "concurrently \"nodemon src/index.js\" \" peerjs --port 5001 --path /\""
   },
   "keywords": [],
   "author": "",
@@ -16,5 +16,8 @@
     "express": "^4.17.1",
     "nodemon": "^2.0.7",
     "socket.io": "^4.0.1"
+  },
+  "devDependencies": {
+    "concurrently": "^6.1.0"
   }
 }

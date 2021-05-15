@@ -1,142 +1,8 @@
 socket = io();
-let root = document.getElementById("video-chat-lobby");
-let divVideoChat = document.getElementById("video-chat-room");
-let joinButton = document.getElementById("join-video");
-const userFeed = document.getElementById("user-video");
-const peerFeed = document.getElementById("peer-video");
-let roomInput = document.getElementById("roomName");
-let rtcPeerConnection;
-let userStream;
-
-//Ice Server Configuration, currently includes only stun servers.
-let iceServers = {
-  iceServers: [
-    { urls: "stun:stun.ekiga.net:3478" },
-    { urls: "stun:stun.l.google.com:19302" },
-  ],
-};
-
-//initializes user media and broadcasts ready for p2p status if the second user has joined.
-let isOwner = false;
-socket.on("room-joined", async (isNew) => {
-  //DEBUG LOG: console.log(`room-joined request caught by client ${socket.id}`);
-  isOwner = isNew;
-  const constraints = {};
-  const cameras = await listMediaDevice("videoinput");
-  const mics = await listMediaDevice("audioinput");
-
-  constraints.video = cameras.length !== 0 ? true : false;
-  constraints.audio = mics.length !== 0 ? true : false;
-
-  //Check for constraint video and audio true or not
-  if (constraints.video === false)
-    return displayError("Video Device doesn't exist");
-  if (constraints.audio === false)
-    return displayError("Audio Device doesn't exist");
-
-  //check user media for audio false
-  if (!(await checkUserMedia("video"))) {
-    displayError("Video Feed is broken");
-    constraints.video = false;
-    return;
-  }
-  //check user media for video false
-  if (!(await checkUserMedia("audio"))) {
-    displayError("Audio Feed is broken");
-    constraints.audio = false;
-    return;
-  }
-  //set stream to user media output
-
-  root.style = "display:none";
-  userStream = await navigator.mediaDevices.getUserMedia(constraints);
-  userFeed.srcObject = userStream;
-  userFeed.onloadedmetadata = () => userFeed.play();
-  if (!isOwner) socket.emit("ready", roomInput.value);
-});
-
-socket.on("room-full", () => {
-  displayError("cannot join room as it is full!");
-});
-
-socket.on("ready", () => {
-  //DEBUG LOG: console.log(
-  //   `client ${socket.id} recieved forwarded ready request from server.`
-  // );
-  if (isOwner) {
-    rtcpConnection = new RTCPeerConnection(iceServers);
-    rtcpConnection.onicecandidate = (e) => {
-      if (e.candidate) socket.emit("candidate", e.candidate, roomInput.value);
-    };
-    rtcpConnection.ontrack = onTrackFn;
-    rtcpConnection.addTrack(userStream.getTracks()[0], userStream);
-    rtcpConnection.addTrack(userStream.getTracks()[1], userStream);
-    rtcpConnection
-      .createOffer()
-      .then((offer) => {
-        rtcpConnection.setLocalDescription(offer);
-        socket.emit("offer", offer, roomInput.value);
-      })
-      .catch((error) => handleError(error.message, error));
-  }
-});
-
-socket.on("candidate", (candidate) => {
-  let icecandidate = new RTCIceCandidate({
-    candidate: candidate.candidate,
-    sdpMid: candidate.sdpMid,
-    sdpMLineIndex: candidate.sdpMLineIndex,
-  });
-  rtcpConnection.addIceCandidate(icecandidate);
-});
-
-socket.on("offer", (offer) => {
-  //DEBUG LOG: console.log(
-  //   `client ${socket.id} recieved forwarded offer request from server.`
-  // );
-  if (!isOwner) {
-    rtcpConnection = new RTCPeerConnection(iceServers);
-    rtcpConnection.onicecandidate = (e) => {
-      if (e.candidate) socket.emit("candidate", e.candidate, roomInput.value);
-    };
-    rtcpConnection.ontrack = onTrackFn;
-    rtcpConnection.addTrack(userStream.getTracks()[0], userStream);
-    rtcpConnection.addTrack(userStream.getTracks()[1], userStream);
-    rtcpConnection.setRemoteDescription(offer);
-    rtcpConnection.createAnswer(
-      (answer) => {
-        rtcpConnection.setLocalDescription(answer);
-        socket.emit("answer", answer, roomInput.value);
-      },
-      (error) => handleError(error.message, error)
-    );
-  }
-});
-
-socket.on("answer", (answer) => {
-  rtcpConnection.setRemoteDescription(answer);
-});
-
-const onTrackFn = (e) => {
-  peerFeed.srcObject = e.streams[0];
-  peerFeed.onloadedmetadata = () => peerFeed.play();
-};
-
-const displayError = (msg, error) => {
-  if (!error) {
-    error = new Error(msg);
-  }
-  const errorElement = document.getElementById("errors");
-  const newError = document.createElement("p");
-  newError.textContent = msg;
-  errorElement.appendChild(newError);
-  setTimeout(() => {
-    errorElement.removeChild(newError);
-  }, 3000);
-  if (typeof error !== "undefined") {
-    console.error(error);
-  }
-};
+let videoGrid = document.getElementById("root-video-grid");
+let joinForm = document.getElementById("join-room-form");
+let roomInput = document.getElementById("room-name");
+let selfStream;
 
 //returns devices of kind audioInput or videoInput if exist else returns undefined
 const listMediaDevice = async (type) => {
@@ -180,8 +46,84 @@ kind: "audioinput"
 label: ""
 __proto__: InputDeviceInfo*/
 
-document.getElementById("join-video").addEventListener("click", async () => {
+const peer = new Peer();
+const peers = {};
+joinForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
   if (roomInput.value === "") return displayError("Please enter a room name!");
   //DEBUG LOG: console.log(`client ${socket.id} passed a join request`);
-  socket.emit("join", roomInput.value);
+  socket.emit("join-room", peer._id, roomInput.value);
+  const constraints = {};
+  const cameras = await listMediaDevice("videoinput");
+  const mics = await listMediaDevice("audioinput");
+
+  constraints.video = cameras.length !== 0 ? true : false;
+  constraints.audio = mics.length !== 0 ? true : false;
+
+  //Check for constraint video and audio true or not
+  if (constraints.video === false)
+    return displayError("Video Device doesn't exist");
+  if (constraints.audio === false)
+    return displayError("Audio Device doesn't exist");
+
+  //check user media for audio false
+  if (!(await checkUserMedia("video"))) {
+    displayError("Video Feed is broken");
+    constraints.video = false;
+    return;
+  }
+  //check user media for video false
+  if (!(await checkUserMedia("audio"))) {
+    displayError("Audio Feed is broken");
+    constraints.audio = false;
+    return;
+  }
+
+  joinForm.style = "display:none";
+  selfStream = await navigator.mediaDevices.getUserMedia(constraints);
+  let selfVideo = document.createElement("video");
+  selfVideo.classList.add("self-video");
+  selfVideo.muted = true;
+  addVideoTrack(selfVideo, selfStream, videoGrid);
 });
+
+peer.on("call", (call) => {
+  call.answer(selfStream);
+  let peerVideo = document.createElement("video");
+  peerVideo.classList.add(`video-${peer._id}`);
+  call.on("stream", (peerStream) =>
+    addVideoTrack(peerVideo, peerStream, videoGrid)
+  );
+});
+
+socket.on("new-user-connected", (userId) => {
+  connectToNewUser(userId, selfStream);
+});
+
+socket.on("user-disconnected", (userId) => {
+  if (peers[userId]) peers[userId].close();
+});
+
+socket.on("room-full", () => {
+  return displayError("room is already full.");
+});
+
+const connectToNewUser = (userId, stream) => {
+  console.log(`calling ${userId} with`);
+  let call = peer.call(userId, stream);
+  let peerVideo = document.createElement("video");
+  peerVideo.classList.add(`video-${userId}`);
+  call.on("stream", (peerStream) =>
+    addVideoTrack(peerVideo, peerStream, videoGrid)
+  );
+  call.on("close", () => {
+    peerVideo.remove();
+  });
+  peers[userId] = call;
+};
+
+const addVideoTrack = (videoElement, mediaStream, rootElement) => {
+  videoElement.srcObject = mediaStream;
+  videoElement.onloadedmetadata = () => videoElement.play();
+  rootElement.appendChild(videoElement);
+};

@@ -4,20 +4,17 @@
     <head>
       <meta charset="utf-8" />
       <title>Video Chat Application</title>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.js"></script>
+      <script src="https://unpkg.com/peerjs@1.3.1/dist/peerjs.min.js"></script>
       <link href="css/styles.css" rel="stylesheet" />
     </head>
   </head>
   <body>
-    <div id="video-chat-lobby">
-      <h1>Video Feed</h1>
-      <input id="roomName" type="text" placeholder="Room Name" />
-      <button id="join-video">Join</button>
-    </div>
-    <div id="video-chat-room">
-      <video id="user-video" autoplay></video>
-      <video id="peer-video" autoplay></video>
-    </div>
+    <form id="join-room-form">
+      <h1>Video Chat Application</h1>
+      <input id="room-name" type="text" placeholder="enter room name" />
+      <button type="submit">Join</button>
+    </form>
+    <div id="root-video-grid"></div>
 
     <div id="errors"></div>
   </body>
