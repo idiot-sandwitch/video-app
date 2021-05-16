@@ -98,6 +98,7 @@ __proto__: InputDeviceInfo*/
   });
 
   peer.on("call", (call) => {
+    console.log('Call was answered');
     call.answer(selfStream);
     let peerVideo = document.createElement("video");
     peerVideo.classList.add(`video-${peer._id}`);
@@ -134,10 +135,13 @@ __proto__: InputDeviceInfo*/
 
   const addVideoTrack = (videoElement, mediaStream, rootElement) => {
     videoElement.srcObject = mediaStream;
+    videoElement.autoplay = true;
+    rootElement.appendChild(videoElement);
+
     // videoElement.setAttribute('autoplay','')
-    videoElement.onloadedmetadata = () => {
-      videoElement.play();
-      rootElement.appendChild(videoElement);
-    }
+    // videoElement.onloadedmetadata = () => {
+    //   videoElement.play();
+    //   rootElement.appendChild(videoElement);
+    // }
   };
 });
