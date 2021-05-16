@@ -134,9 +134,9 @@ __proto__: InputDeviceInfo*/
 
   const addVideoTrack = (videoElement, mediaStream, rootElement) => {
     videoElement.srcObject = mediaStream;
-    videoElement.setAttribute('autoplay','')
+    // videoElement.setAttribute('autoplay','')
     videoElement.onloadedmetadata = () => {
-      // videoElement.play();
+      videoElement.play();
       rootElement.appendChild(videoElement);
     }
   };
