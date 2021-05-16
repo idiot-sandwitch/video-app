@@ -48,6 +48,7 @@ __proto__: InputDeviceInfo*/
 
 const peer = new Peer();
 const peers = {};
+
 joinForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   if (roomInput.value === "") return displayError("Please enter a room name!");
