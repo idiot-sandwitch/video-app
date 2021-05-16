@@ -7,7 +7,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "server": "nodemon .",
-    "dev": "concurrently \"nodemon .\" \" peerjs --port 5001 --path /\""
+    "dev": "concurrently \"nodemon .\" \" peerjs --port 5001 --path /\"",
+    "start": "node server.js"
   },
   "keywords": [],
   "author": "",
