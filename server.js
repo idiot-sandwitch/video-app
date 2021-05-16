@@ -8,6 +8,12 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
+app.set('view engine', 'pug')
+
+app.get('/', (req, res) => {
+  res.render('index')
+})
+
 io.on("connection", (socket) => {
   console.log(`new connection with id: ${socket.id}`);
 
