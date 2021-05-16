@@ -1,6 +1,9 @@
 socket = io();
 
 const displayError = (msg, error) => {
+  if (!error) {
+    error = new Error(msg);
+  }
   const errorElement = document.getElementById("errors");
   errorElement.innerHTML += `<p>${msg}</p>`;
   if (typeof error !== "undefined") {
@@ -52,8 +55,10 @@ document.querySelector("#join-video").addEventListener("click", async () => {
   constraints.audio = mics.length !== 0 ? true : false;
 
   //Check for constraint video and audio true or not
-  if (constraints.video === false) displayError("Video Device doesn't exist");
-  if (constraints.audio === false) displayError("Audio Device doesn't exist");
+  if (constraints.video === false)
+    return displayError("Video Device doesn't exist");
+  if (constraints.audio === false)
+    return displayError("Audio Device doesn't exist");
 
   //check user media for audio false
   if (!(await checkUserMedia("video"))) {
@@ -67,6 +72,6 @@ document.querySelector("#join-video").addEventListener("click", async () => {
   }
   //set stream to user media output
   const stream = await navigator.mediaDevices.getUserMedia(constraints);
-  const feed = document.querySelector("#video-feed");
+  const feed = document.getElementById("video-feed");
   feed.srcObject = stream;
 });
