@@ -99,7 +99,7 @@ __proto__: InputDeviceInfo*/
 
   peer.on("call", async (call) => {
     await call.answer(selfStream);
-    console.log(`answered call from ${call.peer._id} with`, selfStream);
+    console.log(`answered call from ${call.peer} with`, selfStream);
     let peerVideo = document.createElement("video");
     peerVideo.classList.add(`video-${peer._id}`);
     call.on(
@@ -107,6 +107,7 @@ __proto__: InputDeviceInfo*/
       async (peerStream) =>
         await addVideoTrack(peerVideo, peerStream, videoGrid)
     );
+    peers[call.peer] = call;
   });
 
   socket.on("new-user-connected", (userId) => {
@@ -122,7 +123,7 @@ __proto__: InputDeviceInfo*/
   });
 
   const connectToNewUser = (userId, stream) => {
-    console.log(`calling ${userId} with`);
+    console.log(`calling ${userId} with`, stream);
     let call = peer.call(userId, stream);
     let peerVideo = document.createElement("video");
     peerVideo.classList.add(`video-${userId}`);
