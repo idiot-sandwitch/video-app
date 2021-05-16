@@ -66,7 +66,6 @@ __proto__: InputDeviceInfo*/
     if (roomInput.value === "")
       return displayError("Please enter a room name!");
     //DEBUG LOG: console.log(`client ${socket.id} passed a join request`);
-    socket.emit("join-room", peer._id, roomInput.value);
     const constraints = {};
     const cameras = await listMediaDevice("videoinput");
     const mics = await listMediaDevice("audioinput");
@@ -94,16 +93,21 @@ __proto__: InputDeviceInfo*/
     let selfVideo = document.createElement("video");
     selfVideo.classList.add("self-video");
     selfVideo.muted = true;
-    addVideoTrack(selfVideo, selfStream, videoGrid);
+    await addVideoTrack(selfVideo, selfStream, videoGrid);
+    socket.emit("join-room", peer._id, roomInput.value);
   });
 
-  peer.on("call", (call) => {
-    call.answer(selfStream);
+  peer.on("call", async (call) => {
+    await call.answer(selfStream);
+    console.log(`answered call from ${call.peer} with`, selfStream);
     let peerVideo = document.createElement("video");
-    peerVideo.classList.add(`video-${peer._id}`);
-    call.on("stream", (peerStream) =>
-      addVideoTrack(peerVideo, peerStream, videoGrid)
+    peerVideo.classList.add(`video-${call.peer}`);
+    call.on(
+      "stream",
+      async (peerStream) =>
+        await addVideoTrack(peerVideo, peerStream, videoGrid)
     );
+    peers[call.peer] = call;
   });
 
   socket.on("new-user-connected", (userId) => {
@@ -119,12 +123,14 @@ __proto__: InputDeviceInfo*/
   });
 
   const connectToNewUser = (userId, stream) => {
-    console.log(`calling ${userId} with`);
+    console.log(`calling ${userId} with`, stream);
     let call = peer.call(userId, stream);
     let peerVideo = document.createElement("video");
     peerVideo.classList.add(`video-${userId}`);
-    call.on("stream", (peerStream) =>
-      addVideoTrack(peerVideo, peerStream, videoGrid)
+    call.on(
+      "stream",
+      async (peerStream) =>
+        await addVideoTrack(peerVideo, peerStream, videoGrid)
     );
     call.on("close", () => {
       peerVideo.remove();
@@ -132,11 +138,15 @@ __proto__: InputDeviceInfo*/
     peers[userId] = call;
   };
 
-  const addVideoTrack = (videoElement, mediaStream, rootElement) => {
+  const addVideoTrack = async (videoElement, mediaStream, rootElement) => {
     videoElement.srcObject = mediaStream;
-    videoElement.onloadedmetadata = () => {
-      videoElement.play();
-      rootElement.appendChild(videoElement);
-    }
+    videoElement.autoplay = true;
+    await rootElement.appendChild(videoElement);
+
+    // videoElement.setAttribute('autoplay','')
+    // videoElement.onloadedmetadata = () => {
+    //   videoElement.play();
+    //   rootElement.appendChild(videoElement);
+    // }
   };
 });
