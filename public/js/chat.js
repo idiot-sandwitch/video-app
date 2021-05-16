@@ -43,13 +43,6 @@ const checkUserMedia = async (media) => {
   }
 };
 
-/*0: InputDeviceInfo
-deviceId: ""
-groupId: "e21434bb369a3f5cf04421caa570acbf40d772ae6236a19c491993ebdd4b48d1"
-kind: "audioinput"
-label: ""
-__proto__: InputDeviceInfo*/
-
 document.querySelector("#join-video").addEventListener("click", async () => {
   const constraints = {};
   const cameras = await listMediaDevice("videoinput");
