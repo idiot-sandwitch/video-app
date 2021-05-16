@@ -4,6 +4,18 @@ let joinForm = document.getElementById("join-room-form");
 let roomInput = document.getElementById("room-name");
 let selfStream;
 
+let rootErrorElement = document.getElementById("errors");
+const displayError = async (message, error) => {
+  if (!error) error = new Error(message);
+  console.log(message);
+  const newError = document.createElement("p");
+  newError.classList.add("error-element");
+  rootErrorElement.appendChild(newError);
+  setTimeout(() => {
+    rootErrorElement.remove(newError);
+  }, 3000);
+};
+
 //returns devices of kind audioInput or videoInput if exist else returns undefined
 const listMediaDevice = async (type) => {
   try {
