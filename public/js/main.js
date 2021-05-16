@@ -101,7 +101,7 @@ __proto__: InputDeviceInfo*/
     await call.answer(selfStream);
     console.log(`answered call from ${call.peer} with`, selfStream);
     let peerVideo = document.createElement("video");
-    peerVideo.classList.add(`video-${peer._id}`);
+    peerVideo.classList.add(`video-${call.peer}`);
     call.on(
       "stream",
       async (peerStream) =>
