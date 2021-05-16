@@ -136,7 +136,7 @@ __proto__: InputDeviceInfo*/
     videoElement.srcObject = mediaStream;
     videoElement.setAttribute('autoplay','')
     // videoElement.onloadedmetadata = () => {
-      videoElement.play();
+      // videoElement.play();
       rootElement.appendChild(videoElement);
     // }
   };
