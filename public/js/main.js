@@ -74,9 +74,9 @@ joinForm.addEventListener("submit", async (e) => {
 
   //Check for constraint video and audio true or not
   if (constraints.video === false)
-    return displayError("Video Device doesn't exist");
+    displayError("Video Device doesn't exist");
   if (constraints.audio === false)
-    return displayError("Audio Device doesn't exist");
+    displayError("Audio Device doesn't exist");
 
   //check user media for audio false
   if (!(await checkUserMedia("video"))) {
