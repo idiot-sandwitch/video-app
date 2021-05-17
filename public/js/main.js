@@ -103,7 +103,7 @@ __proto__: InputDeviceInfo*/
     let selfVideo = document.createElement("video");
     selfVideo.classList.add("self-video");
     selfVideo.muted = true;
-    await addVideoTrack(selfVideo, selfStream, videoGrid);
+    addVideoTrack(selfVideo, selfStream, videoGrid);
     socket.emit("join-room", peer._id, roomInput.value);
   });
 
