@@ -181,6 +181,7 @@ __proto__: InputDeviceInfo*/
   const addVideoTrack = async (videoElement, mediaStream, rootElement) => {
     videoElement.srcObject = mediaStream;
     videoElement.autoplay = true;
+    videoElement.play();
     await rootElement.appendChild(videoElement);
 
     // videoElement.setAttribute('autoplay','')
