@@ -15,7 +15,7 @@ app.get('/', (req, res) => {
 })
 
 io.on("connection", (socket) => {
-  console.log(`new connection with id: ${socket.id}`);
+  console.log(`new socket connection with socket id: ${socket.id}`);
 
   //Join a room
   socket.on("join-room", (userId, roomName) => {

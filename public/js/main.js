@@ -103,7 +103,7 @@ __proto__: InputDeviceInfo*/
   });
 
   muteAudio.addEventListener("click", async () => {
-    console.log("togled audio");
+    //LOG: console.log("togled audio");
     const enabled = await selfStream.getAudioTracks()[0].enabled;
     if (enabled) {
       selfStream.getAudioTracks()[0].enabled = false;
@@ -127,7 +127,7 @@ __proto__: InputDeviceInfo*/
 
   peer.on("call", async (call) => {
     await call.answer(selfStream);
-    console.log(`answered call from ${call.peer} with`, selfStream);
+    //LOG: console.log(`answered call from ${call.peer} with`, selfStream);
     let peerVideo = document.createElement("video");
     peerVideo.classList.add(`video-${call.peer}`);
     call.on(
@@ -135,6 +135,10 @@ __proto__: InputDeviceInfo*/
       async (peerStream) =>
         await addVideoTrack(peerVideo, peerStream, videoGrid)
     );
+    call.on("close", () => {
+      //LOG: console.log(`Peer Video removed: ${peerVideo.classList}`);
+      peerVideo.remove();
+    });
     peers[call.peer] = call;
   });
 
@@ -143,6 +147,7 @@ __proto__: InputDeviceInfo*/
   });
 
   socket.on("user-disconnected", (userId) => {
+    //LOG: console.log("disconnecting with user: ", userId);
     if (peers[userId]) peers[userId].close();
   });
 
@@ -151,7 +156,7 @@ __proto__: InputDeviceInfo*/
   });
 
   const connectToNewUser = (userId, stream) => {
-    console.log(`calling ${userId} with`, stream);
+    //LOG: console.log(`calling ${userId} with`, stream);
     let call = peer.call(userId, stream);
     let peerVideo = document.createElement("video");
     peerVideo.classList.add(`video-${userId}`);
@@ -161,9 +166,11 @@ __proto__: InputDeviceInfo*/
         await addVideoTrack(peerVideo, peerStream, videoGrid)
     );
     call.on("close", () => {
+      //LOG: console.log(`Peer Video removed: ${peerVideo.classList}`);
       peerVideo.remove();
     });
     peers[userId] = call;
+    //TODO: add on("error") handling in case call fails
   };
 
   const addVideoTrack = async (videoElement, mediaStream, rootElement) => {
