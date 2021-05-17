@@ -178,17 +178,14 @@ __proto__: InputDeviceInfo*/
     //TODO: add on("error") handling in case call fails
   };
 
-  const addVideoTrack = async (videoElement, mediaStream, rootElement) => {
+  const addVideoTrack = (videoElement, mediaStream, rootElement) => {
     videoElement.srcObject = mediaStream;
     videoElement.autoplay = true;
-    videoElement.play();
-    await rootElement.appendChild(videoElement);
 
-    // videoElement.setAttribute('autoplay','')
-    // videoElement.onloadedmetadata = () => {
-    //   videoElement.play();
-    //   rootElement.appendChild(videoElement);
-    // }
+    videoElement.onloadedmetadata = () => {
+      videoElement.play();
+      rootElement.appendChild(videoElement);
+    }
   };
 
   const setAudioButton = async () => {
