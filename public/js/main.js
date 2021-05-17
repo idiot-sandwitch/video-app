@@ -95,15 +95,6 @@ __proto__: InputDeviceInfo*/
     videoControl.style = "display:inline";
     selfStream = await navigator.mediaDevices.getUserMedia(constraints);
 
-    // let selfVideoDiv = document.createElement("div");
-    // muteAudio = document.createElement("button");
-    // muteAudio.type = "button";
-    // muteAudio.classList.add("toggle-audio");
-
-    // muteVideo = document.createElement("button");
-    // muteVideo.type = "button";
-    // muteVideo.classList.add("toggle-video");
-
     let selfVideo = document.createElement("video");
     selfVideo.classList.add("self-video");
     selfVideo.muted = true;
@@ -113,20 +104,24 @@ __proto__: InputDeviceInfo*/
 
   muteAudio.addEventListener("click", async () => {
     console.log("togled audio");
-    const enabled = selfStream.getAudioTracks()[0].enabled;
+    const enabled = await selfStream.getAudioTracks()[0].enabled;
     if (enabled) {
       selfStream.getAudioTracks()[0].enabled = false;
+      await setAudioButton();
     } else {
       selfStream.getAudioTracks()[0].enabled = true;
+      await setAudioButton();
     }
   });
 
   muteVideo.addEventListener("click", async () => {
-    const enabled = selfStream.getVideoTracks()[0].enabled;
+    const enabled = await selfStream.getVideoTracks()[0].enabled;
     if (enabled) {
       selfStream.getVideoTracks()[0].enabled = false;
+      await setVideoButton();
     } else {
       selfStream.getVideoTracks()[0].enabled = true;
+      await setVideoButton();
     }
   });
 
@@ -181,5 +176,21 @@ __proto__: InputDeviceInfo*/
     //   videoElement.play();
     //   rootElement.appendChild(videoElement);
     // }
+  };
+
+  const setAudioButton = async () => {
+    if (selfStream.getAudioTracks()[0].enabled) {
+      muteAudio.innerHTML = "Mute audio";
+    } else {
+      muteAudio.innerHTML = "Unmute Audio";
+    }
+  };
+
+  const setVideoButton = async () => {
+    if (selfStream.getVideoTracks()[0].enabled) {
+      muteVideo.innerHTML = "Disable Video";
+    } else {
+      muteVideo.innerHTML = "Enable Video";
+    }
   };
 });
