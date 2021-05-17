@@ -11,7 +11,11 @@ html
       input#room-name(type='text' placeholder='enter room name')
       button(type='submit') Join
     #root-video-grid
+    div(style="display:none")#video-controls
+      button#toggle-audio(type= 'button') Mute audio
+      button#toggle-video(type= 'button') Disable Video 
     #errors
+   
     script(src='socket.io/socket.io.js')
     script(src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous")
     script(src='js/main.js' defer)

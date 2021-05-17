@@ -3,6 +3,9 @@ $(document).ready(function () {
   let videoGrid = document.getElementById("root-video-grid");
   let joinForm = document.getElementById("join-room-form");
   let roomInput = document.getElementById("room-name");
+  let muteAudio = document.getElementById("toggle-audio");
+  let muteVideo = document.getElementById("toggle-video");
+  let videoControl = document.getElementById("video-controls");
   let selfStream;
 
   let rootErrorElement = document.getElementById("errors");
@@ -89,12 +92,42 @@ __proto__: InputDeviceInfo*/
     }
 
     joinForm.style = "display:none";
+    videoControl.style = "display:inline";
     selfStream = await navigator.mediaDevices.getUserMedia(constraints);
+
+    // let selfVideoDiv = document.createElement("div");
+    // muteAudio = document.createElement("button");
+    // muteAudio.type = "button";
+    // muteAudio.classList.add("toggle-audio");
+
+    // muteVideo = document.createElement("button");
+    // muteVideo.type = "button";
+    // muteVideo.classList.add("toggle-video");
+
     let selfVideo = document.createElement("video");
     selfVideo.classList.add("self-video");
     selfVideo.muted = true;
     await addVideoTrack(selfVideo, selfStream, videoGrid);
     socket.emit("join-room", peer._id, roomInput.value);
+  });
+
+  muteAudio.addEventListener("click", async () => {
+    console.log("togled audio");
+    const enabled = selfStream.getAudioTracks()[0].enabled;
+    if (enabled) {
+      selfStream.getAudioTracks()[0].enabled = false;
+    } else {
+      selfStream.getAudioTracks()[0].enabled = true;
+    }
+  });
+
+  muteVideo.addEventListener("click", async () => {
+    const enabled = selfStream.getVideoTracks()[0].enabled;
+    if (enabled) {
+      selfStream.getVideoTracks()[0].enabled = false;
+    } else {
+      selfStream.getVideoTracks()[0].enabled = true;
+    }
   });
 
   peer.on("call", async (call) => {
