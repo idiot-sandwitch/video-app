@@ -103,7 +103,7 @@ __proto__: InputDeviceInfo*/
     let selfVideo = document.createElement("video");
     selfVideo.classList.add("self-video");
     selfVideo.muted = true;
-    await addVideoTrack(selfVideo, selfStream, videoGrid);
+    addVideoTrack(selfVideo, selfStream, videoGrid);
     socket.emit("join-room", peer._id, roomInput.value);
   });
 
@@ -178,16 +178,14 @@ __proto__: InputDeviceInfo*/
     //TODO: add on("error") handling in case call fails
   };
 
-  const addVideoTrack = async (videoElement, mediaStream, rootElement) => {
+  const addVideoTrack = (videoElement, mediaStream, rootElement) => {
     videoElement.srcObject = mediaStream;
     videoElement.autoplay = true;
-    await rootElement.appendChild(videoElement);
 
-    // videoElement.setAttribute('autoplay','')
-    // videoElement.onloadedmetadata = () => {
-    //   videoElement.play();
-    //   rootElement.appendChild(videoElement);
-    // }
+    videoElement.onloadedmetadata = () => {
+      videoElement.play();
+      rootElement.appendChild(videoElement);
+    }
   };
 
   const setAudioButton = async () => {
