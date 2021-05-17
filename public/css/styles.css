@@ -19,6 +19,11 @@
   position: absolute;
 }
 
+#room-title {
+  text-align: center;
+  font-family: "Courier New", Courier, monospace;
+}
+
 video {
   height: 100%;
   width: 100%;

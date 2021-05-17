@@ -6,8 +6,8 @@ $(document).ready(function () {
   let muteAudio = document.getElementById("toggle-audio");
   let muteVideo = document.getElementById("toggle-video");
   let videoControl = document.getElementById("video-controls");
+  let roomTitle = document.getElementById("room-title");
   let selfStream;
-
   let rootErrorElement = document.getElementById("errors");
   const displayError = async (message, error) => {
     if (!error) error = new Error(message);
@@ -69,6 +69,7 @@ __proto__: InputDeviceInfo*/
     if (roomInput.value === "")
       return displayError("Please enter a room name!");
     //DEBUG LOG: console.log(`client ${socket.id} passed a join request`);
+
     const constraints = {};
     const cameras = await listMediaDevice("videoinput");
     const mics = await listMediaDevice("audioinput");
@@ -93,6 +94,10 @@ __proto__: InputDeviceInfo*/
 
     joinForm.style = "display:none";
     videoControl.style = "display:inline";
+
+    roomTitle.innerHTML = `Room name: ${roomInput.value}`;
+    roomTitle.style = "display:block";
+
     selfStream = await navigator.mediaDevices.getUserMedia(constraints);
 
     let selfVideo = document.createElement("video");
