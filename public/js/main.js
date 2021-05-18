@@ -135,10 +135,8 @@ __proto__: InputDeviceInfo*/
     //LOG: console.log(`answered call from ${call.peer} with`, selfStream);
     let peerVideo = document.createElement("video");
     peerVideo.classList.add(`video-${call.peer}`);
-    call.on(
-      "stream",
-      async (peerStream) =>
-        await addVideoTrack(peerVideo, peerStream, videoGrid)
+    call.on("stream", (peerStream) =>
+      addVideoTrack(peerVideo, peerStream, videoGrid)
     );
     call.on("close", () => {
       //LOG: console.log(`Peer Video removed: ${peerVideo.classList}`);
@@ -165,10 +163,8 @@ __proto__: InputDeviceInfo*/
     let call = peer.call(userId, stream);
     let peerVideo = document.createElement("video");
     peerVideo.classList.add(`video-${userId}`);
-    call.on(
-      "stream",
-      async (peerStream) =>
-        await addVideoTrack(peerVideo, peerStream, videoGrid)
+    call.on("stream", (peerStream) =>
+      addVideoTrack(peerVideo, peerStream, videoGrid)
     );
     call.on("close", () => {
       //LOG: console.log(`Peer Video removed: ${peerVideo.classList}`);
@@ -185,7 +181,7 @@ __proto__: InputDeviceInfo*/
     videoElement.onloadedmetadata = () => {
       videoElement.play();
       rootElement.appendChild(videoElement);
-    }
+    };
   };
 
   const setAudioButton = async () => {
