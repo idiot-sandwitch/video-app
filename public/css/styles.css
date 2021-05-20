@@ -24,6 +24,10 @@
   font-family: "Courier New", Courier, monospace;
 }
 
+div#errors > p {
+  color: red;
+}
+
 video {
   height: 100%;
   width: 100%;
@@ -31,18 +35,18 @@ video {
 }
 
 video::-webkit-media-controls {
-  display:none !important;
+  display: none !important;
 }
 
 *::-webkit-media-controls-panel {
-  display: none!important;
+  display: none !important;
   -webkit-appearance: none;
 }
 
 /* Old shadow dom for play button */
 
 *::-webkit-media-controls-play-button {
-  display: none!important;
+  display: none !important;
   -webkit-appearance: none;
 }
 
@@ -51,6 +55,6 @@ video::-webkit-media-controls {
 /* This one works! */
 
 *::-webkit-media-controls-start-playback-button {
-  display: none!important;
+  display: none !important;
   -webkit-appearance: none;
 }

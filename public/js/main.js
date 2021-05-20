@@ -3,17 +3,19 @@ $(document).ready(function () {
   let videoGrid = document.getElementById("root-video-grid");
   let joinForm = document.getElementById("join-room-form");
   let roomInput = document.getElementById("room-name");
-  let muteAudio = document.getElementById("toggle-audio");
-  let muteVideo = document.getElementById("toggle-video");
-  let videoControl = document.getElementById("video-controls");
   let roomTitle = document.getElementById("room-title");
   let selfStream;
   let rootErrorElement = document.getElementById("errors");
+  const peer = new Peer();
+  const peers = {};
+
+  //displays errors for 3 seconds.
   const displayError = async (message, error) => {
     if (!error) error = new Error(message);
     console.log(message);
     const newError = document.createElement("p");
     newError.classList.add("error-element");
+    newError.textContent = message;
     rootErrorElement.appendChild(newError);
     setTimeout(() => {
       rootErrorElement.remove(newError);
@@ -55,21 +57,8 @@ $(document).ready(function () {
     }
   };
 
-  /*0: InputDeviceInfo
-deviceId: ""
-groupId: "e21434bb369a3f5cf04421caa570acbf40d772ae6236a19c491993ebdd4b48d1"
-kind: "audioinput"
-label: ""
-__proto__: InputDeviceInfo*/
-
-  const peer = new Peer();
-  const peers = {};
-  joinForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    if (roomInput.value === "")
-      return displayError("Please enter a room name!");
-    //DEBUG LOG: console.log(`client ${socket.id} passed a join request`);
-
+  //gets constraints and returns self stream.
+  const getSelfStream = async () => {
     const constraints = {};
     const cameras = await listMediaDevice("videoinput");
     const mics = await listMediaDevice("audioinput");
@@ -91,54 +80,87 @@ __proto__: InputDeviceInfo*/
       displayError("Audio Feed is broken");
       constraints.audio = false;
     }
+    let stream = await navigator.mediaDevices.getUserMedia(constraints);
+    return stream;
+  };
+
+  //room joining initiation callback.
+  joinForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (roomInput.value === "")
+      return displayError("Please enter a room name!");
+
+    selfStream = await getSelfStream();
 
     joinForm.style = "display:none";
-    videoControl.style = "display:inline";
-
     roomTitle.innerHTML = `Room name: ${roomInput.value}`;
     roomTitle.style = "display:block";
 
-    selfStream = await navigator.mediaDevices.getUserMedia(constraints);
+    let selfVideo = document.createElement("div");
+    selfVideo.id = `video-element-self`;
+    formatVideoElement(selfVideo, peer._id);
 
-    let selfVideo = document.createElement("video");
-    selfVideo.classList.add("self-video");
-    selfVideo.muted = true;
     addVideoTrack(selfVideo, selfStream, videoGrid);
     socket.emit("join-room", peer._id, roomInput.value);
   });
+  const addVideoTrack = (windowElement, mediaStream, rootElement) => {
+    let videoElement = windowElement.children[0];
+    videoElement.srcObject = mediaStream;
+    videoElement.autoplay = true;
 
-  muteAudio.addEventListener("click", async () => {
-    //LOG: console.log("togled audio");
-    const enabled = await selfStream.getAudioTracks()[0].enabled;
-    if (enabled) {
-      selfStream.getAudioTracks()[0].enabled = false;
-      await setAudioButton();
-    } else {
-      selfStream.getAudioTracks()[0].enabled = true;
-      await setAudioButton();
-    }
-  });
+    videoElement.onloadedmetadata = () => {
+      videoElement.play();
+      rootElement.appendChild(windowElement);
+    };
+  };
 
-  muteVideo.addEventListener("click", async () => {
-    const enabled = await selfStream.getVideoTracks()[0].enabled;
-    if (enabled) {
-      selfStream.getVideoTracks()[0].enabled = false;
-      await setVideoButton();
-    } else {
-      selfStream.getVideoTracks()[0].enabled = true;
-      await setVideoButton();
-    }
-  });
+  //adds a video stream and controller buttons to user's window.
+  const formatVideoElement = (containerElement, peerId) => {
+    const id = peerId === peer._id ? "self" : `${peerId}`;
 
+    let videoElement = document.createElement("video");
+    videoElement.id = "video";
+    if (self) videoElement.muted = true;
+
+    let controlElement = document.createElement("div");
+    controlElement.id = `stream-controls-${id}`;
+
+    let toggleAudioButton = document.createElement("button");
+    toggleAudioButton.id = "toggle-mute";
+    toggleAudioButton.innerHTML = "toggle audio";
+    toggleAudioButton.addEventListener("click", toggleAudio.bind(this, peerId));
+
+    let toggleVideoButton = document.createElement("button");
+    toggleVideoButton.id = "toggle-video";
+    toggleVideoButton.innerHTML = "toggle Video";
+    toggleVideoButton.addEventListener("click", toggleVideo.bind(this, peerId));
+
+    controlElement.appendChild(toggleAudioButton);
+    controlElement.appendChild(toggleVideoButton);
+
+    containerElement.appendChild(videoElement);
+    containerElement.appendChild(controlElement);
+  };
+
+  //TODO: Add real time stream peroperty toggle here.
+  const toggleAudio = async (peerId) => {
+    console.log(`toggleAudio called with peerId = ${peerId}.`);
+    socket.emit("toggle-user-audio", peerId);
+  };
+  const toggleVideo = async (peerId) => {
+    console.log(`toggleVideo called with peerId = ${peerId}.`);
+    socket.emit("toggle-user-video", peerId);
+  };
+
+  //local rtcp call handler.
   peer.on("call", async (call) => {
     await call.answer(selfStream);
     //LOG: console.log(`answered call from ${call.peer} with`, selfStream);
-    let peerVideo = document.createElement("video");
-    peerVideo.classList.add(`video-${call.peer}`);
-    call.on(
-      "stream",
-      async (peerStream) =>
-        await addVideoTrack(peerVideo, peerStream, videoGrid)
+    let peerVideo = document.createElement("div");
+    peerVideo.id = `video-element-${call.peer}`;
+    formatVideoElement(peerVideo, call.peer);
+    call.on("stream", (peerStream) =>
+      addVideoTrack(peerVideo, peerStream, videoGrid)
     );
     call.on("close", () => {
       //LOG: console.log(`Peer Video removed: ${peerVideo.classList}`);
@@ -147,60 +169,93 @@ __proto__: InputDeviceInfo*/
     peers[call.peer] = call;
   });
 
-  socket.on("new-user-connected", (userId) => {
-    connectToNewUser(userId, selfStream);
+  socket.on("new-user-connected", (peerId) => {
+    connectToNewUser(peerId, selfStream);
   });
 
-  socket.on("user-disconnected", (userId) => {
-    //LOG: console.log("disconnecting with user: ", userId);
-    if (peers[userId]) peers[userId].close();
+  socket.on("user-disconnected", (peerId) => {
+    //LOG: console.log("disconnecting with user: ", peerId);
+    if (peers[peerId]) peers[peerId].close();
   });
 
   socket.on("room-full", () => {
     return displayError("room is already full.");
   });
 
-  const connectToNewUser = (userId, stream) => {
-    //LOG: console.log(`calling ${userId} with`, stream);
-    let call = peer.call(userId, stream);
-    let peerVideo = document.createElement("video");
-    peerVideo.classList.add(`video-${userId}`);
-    call.on(
-      "stream",
-      async (peerStream) =>
-        await addVideoTrack(peerVideo, peerStream, videoGrid)
+  socket.on("admin-audio-toggle", async () => {
+    await modifySelfStream("audio");
+  });
+  socket.on("admin-video-toggle", async () => {
+    await modifySelfStream("video");
+  });
+
+  const modifySelfStream = async (type) => {
+    let enabled;
+    switch (type) {
+      case "audio":
+        enabled = await selfStream.getAudioTracks()[0].enabled;
+        selfStream.getAudioTracks()[0].enabled = enabled ? false : true;
+        break;
+      case "video":
+        enabled = await selfStream.getVideoTracks()[0].enabled;
+        selfStream.getVideoTracks()[0].enabled = enabled ? false : true;
+        break;
+    }
+  };
+
+  const connectToNewUser = (peerId, stream) => {
+    //LOG: console.log(`calling ${peerId} with`, stream);
+    let call = peer.call(peerId, stream);
+    let peerVideo = document.createElement("div");
+    peerVideo.id = `video-element-${peerId}`;
+    formatVideoElement(peerVideo, peerId);
+    call.on("stream", (peerStream) =>
+      addVideoTrack(peerVideo, peerStream, videoGrid)
     );
     call.on("close", () => {
       //LOG: console.log(`Peer Video removed: ${peerVideo.classList}`);
       peerVideo.remove();
     });
-    peers[userId] = call;
+    peers[peerId] = call;
     //TODO: add on("error") handling in case call fails
   };
 
-  const addVideoTrack = (videoElement, mediaStream, rootElement) => {
-    videoElement.srcObject = mediaStream;
-    videoElement.autoplay = true;
+  // muteAudio.addEventListener("click", async () => {
+  //   //LOG: console.log("togled audio");
+  //   const enabled = await selfStream.getAudioTracks()[0].enabled;
+  //   if (enabled) {
+  //     selfStream.getAudioTracks()[0].enabled = false;
+  //     await setAudioButton();
+  //   } else {
+  //     selfStream.getAudioTracks()[0].enabled = true;
+  //     await setAudioButton();
+  //   }
+  // });
 
-    videoElement.onloadedmetadata = () => {
-      videoElement.play();
-      rootElement.appendChild(videoElement);
-    }
-  };
+  // muteVideo.addEventListener("click", async () => {
+  //   const enabled = await selfStream.getVideoTracks()[0].enabled;
+  //   if (enabled) {
+  //     selfStream.getVideoTracks()[0].enabled = false;
+  //     await setVideoButton();
+  //   } else {
+  //     selfStream.getVideoTracks()[0].enabled = true;
+  //     await setVideoButton();
+  //   }
+  // });
 
-  const setAudioButton = async () => {
-    if (selfStream.getAudioTracks()[0].enabled) {
-      muteAudio.innerHTML = "Mute audio";
-    } else {
-      muteAudio.innerHTML = "Unmute Audio";
-    }
-  };
+  // const setAudioButton = async (button, enabled) => {
+  //   if (selfStream.getAudioTracks()[0].enabled) {
+  //     muteAudio.innerHTML = "Mute audio";
+  //   } else {
+  //     muteAudio.innerHTML = "Unmute Audio";
+  //   }
+  // };
 
-  const setVideoButton = async () => {
-    if (selfStream.getVideoTracks()[0].enabled) {
-      muteVideo.innerHTML = "Disable Video";
-    } else {
-      muteVideo.innerHTML = "Enable Video";
-    }
-  };
+  // const setVideoButton = async () => {
+  //   if (selfStream.getVideoTracks()[0].enabled) {
+  //     muteVideo.innerHTML = "Disable Video";
+  //   } else {
+  //     muteVideo.innerHTML = "Enable Video";
+  //   }
+  // };
 });
